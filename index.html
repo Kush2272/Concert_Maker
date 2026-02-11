@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HEY MAKERAN SIM — Stage UI</title>
+  <style>
+    :root{
+      --bg1:#070710;
+      --bg2:#0c0c18;
+      --panel: rgba(18,18,32,.72);
+      --panel2: rgba(28,28,48,.55);
+      --stroke: rgba(255,255,255,.12);
+      --stroke2: rgba(255,255,255,.18);
+      --text:#eef;
+      --muted: rgba(238,238,255,.75);
+      --good: rgba(120,255,210,.9);
+      --bad: rgba(255,130,160,.9);
+      --warn: rgba(255,210,120,.95);
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --round: 16px;
+      --round2: 22px;
+    }
+
+    html, body { margin:0; height:100%; background: radial-gradient(1200px 600px at 30% 10%, #151533 0%, transparent 55%),
+                                                radial-gradient(900px 500px at 85% 25%, #1a1430 0%, transparent 60%),
+                                                linear-gradient(180deg, var(--bg2), var(--bg1));
+                 color:var(--text);
+                 font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+                 overflow:hidden;
+    }
+
+    /* Top HUD */
+    .hud{
+      position: fixed;
+      top: 14px; left: 14px; right: 14px;
+      display:flex; gap:12px; align-items:stretch; flex-wrap:wrap;
+      z-index: 20;
+    }
+
+    .card{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      border-radius: var(--round2);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .hud-left{
+      flex: 1 1 520px;
+      padding: 12px 12px 10px;
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    }
+
+    .hud-right{
+      flex: 0 0 auto;
+      padding: 12px;
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+
+    .title{
+      display:flex; flex-direction:column; gap:2px; margin-right: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .title b{ font-size: 14px; letter-spacing:.4px; }
+    .title span{ font-size: 12px; color: var(--muted); }
+
+    .btn{
+      border: 1px solid var(--stroke2);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .08s ease, background .15s ease, border-color .15s ease;
+      display:flex; gap:8px; align-items:center;
+      font-weight: 600;
+      letter-spacing:.2px;
+    }
+    .btn:hover{ background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06)); }
+    .btn:active{ transform: translateY(1px) scale(.99); }
+
+    .btn.good { border-color: rgba(120,255,210,.35); }
+    .btn.warn { border-color: rgba(255,210,120,.35); }
+    .btn.bad  { border-color: rgba(255,130,160,.35); }
+
+    .pill{
+      display:flex; gap:8px; align-items:center;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .pill b{ color: var(--text); font-size: 13px; }
+
+    .field{
+      display:flex; align-items:center; gap:8px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    input[type="number"]{
+      width: 110px;
+      background: transparent;
+      border: none;
+      outline:none;
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing:.2px;
+    }
+    input[type="range"]{
+      width: 150px;
+      accent-color: #c8c8ff;
+    }
+    input[type="file"]{
+      color: var(--muted);
+      font-size: 12px;
+    }
+    #presetMusic{
+      background: #000;
+      color: #fff;
+      border-color: rgba(255,255,255,.35);
+    }
+    #presetMusic option{
+      background: #000;
+      color: #fff;
+    }
+
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+    }
+    .pro-tip{
+      flex: 1 1 100%;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      color: #ffffff;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.45);
+      background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.08));
+      box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset, 0 8px 26px rgba(0,0,0,.28);
+      text-align: center;
+    }
+
+    /* Bottom mini legend */
+    .legend{
+      position: fixed;
+      left: 14px;
+      bottom: 14px;
+      padding: 10px 12px;
+      display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+      z-index: 10;
+    }
+    .kbd{
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .kbd b{ color: var(--text); }
+    .useme{
+      position: fixed;
+      top: 104px;
+      right: 14px;
+      max-width: 430px;
+      z-index: 30;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: linear-gradient(180deg, rgba(20,20,36,.94), rgba(10,10,20,.9));
+      box-shadow: 0 20px 48px rgba(0,0,0,.45);
+    }
+    .useme h3{
+      margin: 0 0 8px;
+      font-size: 14px;
+      letter-spacing: .3px;
+    }
+    .useme p{
+      margin: 4px 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .useme p b{ color: #fff; }
+    .useme .row{
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .hidden{ display:none !important; }
+
+    canvas { display:block; width:100vw; height:100vh; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="hud-left card">
+      <div class="title">
+        <b>HEY MAKERAN SIM — STAGE EDITION</b>
+        <span>Spawn infinite dudes • Boss leads • Goofy + Nuke • Now with singer + platform</span>
+      </div>
+
+      <button class="btn good" id="add">➕ Add</button>
+
+      <div class="field">
+        <span style="color:var(--muted); font-size:12px;">Spawn</span>
+        <input id="spawnN" type="number" min="1" max="20000" value="50" />
+        <button class="btn" id="spawnBtn">🚀 Go</button>
+      </div>
+      <div class="field">
+        <span style="color:var(--muted); font-size:12px;">Set People</span>
+        <input id="setPeopleN" type="number" min="0" max="20000" value="0" />
+        <button class="btn" id="setPeopleBtn">🎯 Set</button>
+      </div>
+
+      <button class="btn warn" id="bossBtn">👑 Boss</button>
+      <button class="btn" id="goofy">🤪 Goofy: OFF</button>
+      <button class="btn" id="mosh">🌊 Mosh: OFF</button>
+      <button class="btn" id="handsUp">🙌 Hands Up: OFF</button>
+      <button class="btn bad" id="nuke">☢️ NUKE</button>
+      <button class="btn" id="clear">🧹 Clear</button>
+    </div>
+
+    <div class="hud-right card">
+      <button class="btn" id="toggle">⏯ Play/Pause</button>
+      <button class="btn" id="helpBtn">❔ Help</button>
+
+      <div class="pill">People: <b id="count">0</b></div>
+      <div class="pill">Boss: <b id="bossCount">0</b></div>
+
+      <div class="pill">BPM: <b id="bpmVal">120</b></div>
+      <input id="bpm" type="range" min="60" max="200" value="120" />
+
+      <div class="hint">
+        Upload audio or pick from local `/music` songs. Click once if autoplay blocks.
+      </div>
+      <div class="pro-tip">
+        PRO TIP: If singer gets lost, drag the singer to move and pin it anywhere.
+      </div>
+
+      <input id="audioFile" type="file" accept="audio/*,.m4a,audio/mp4" />
+      <select id="presetMusic" class="btn" style="min-width:200px;">
+        <option value="">Choose from /music</option>
+      </select>
+      <button class="btn" id="reloadTracks">Reload Songs</button>
+      <div class="field">
+        <span style="color:var(--muted); font-size:12px;">YouTube</span>
+        <input id="youtubeUrl" type="text" placeholder="Paste YouTube link" style="width:280px;" />
+        <button class="btn" id="loadYoutube">Play Link</button>
+      </div>
+      <div class="hint" id="ytStatus">YouTube status: idle</div>
+    </div>
+  </div>
+  <div id="useMe" class="useme hidden">
+    <h3>Use Me: Quick Controls</h3>
+    <p><b>Add</b> adds 1 dancer. <b>Spawn + Go</b> adds many at once.</p>
+    <p><b>Set People</b> sets exact crowd count.</p>
+    <p><b>Boss</b> spawns main lead dancer.</p>
+    <p><b>Goofy</b> makes movements chaotic. <b>Mosh</b> sync crowd wave.</p>
+    <p><b>Hands Up</b> puts all hands in air and waves in sync.</p>
+    <p><b>NUKE</b> creates burst effect. <b>Clear</b> removes crowd.</p>
+    <p><b>Play/Pause</b> controls selected local/YouTube music.</p>
+    <p><b>Tip:</b> Drag singer to pin position if lost.</p>
+    <div class="row">
+      <button class="btn" id="useMeClose">Got it</button>
+    </div>
+  </div>
+
+    <div class="legend card">
+      <div class="kbd"><b>Enter</b> in Spawn box = spawn</div>
+      <div class="kbd"><b>Enter</b> in Set People = exact count</div>
+      <div class="kbd"><b>G</b> = goofy</div>
+    <div class="kbd"><b>M</b> = mosh</div>
+    <div class="kbd"><b>H</b> = hands up</div>
+    <div class="kbd"><b>N</b> = nuke</div>
+    <div class="kbd"><b>B</b> = boss</div>
+    <div class="kbd"><b>C</b> = clear</div>
+  </div>
+
+  <canvas id="c"></canvas>
+  <audio id="audio" preload="auto" loop></audio>
+  <div id="ytPlayerHost" style="position:absolute; width:1px; height:1px; overflow:hidden; left:-9999px; top:-9999px;"></div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="music/tracks.js"></script>
+  <script>
+    // ===== Canvas =====
+    const canvas = document.getElementById("c");
+    const ctx = canvas.getContext("2d");
+    const hud = document.querySelector(".hud");
+    function resize() {
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      canvas.width  = Math.floor(innerWidth * dpr);
+      canvas.height = Math.floor(innerHeight * dpr);
+      canvas.style.width = innerWidth + "px";
+      canvas.style.height = innerHeight + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    addEventListener("resize", resize);
+    resize();
+
+    // ===== UI =====
+    const addBtn = document.getElementById("add");
+    const spawnN = document.getElementById("spawnN");
+    const spawnBtn = document.getElementById("spawnBtn");
+    const setPeopleN = document.getElementById("setPeopleN");
+    const setPeopleBtn = document.getElementById("setPeopleBtn");
+    const bossBtn = document.getElementById("bossBtn");
+    const goofyBtn = document.getElementById("goofy");
+    const moshBtn = document.getElementById("mosh");
+    const handsUpBtn = document.getElementById("handsUp");
+    const nukeBtn = document.getElementById("nuke");
+    const clearBtn = document.getElementById("clear");
+    const toggleBtn = document.getElementById("toggle");
+    const helpBtn = document.getElementById("helpBtn");
+    const countEl = document.getElementById("count");
+    const bossCountEl = document.getElementById("bossCount");
+    const bpmSlider = document.getElementById("bpm");
+    const bpmVal = document.getElementById("bpmVal");
+    const audio = document.getElementById("audio");
+    const audioFile = document.getElementById("audioFile");
+    const presetMusic = document.getElementById("presetMusic");
+    const reloadTracksBtn = document.getElementById("reloadTracks");
+    const youtubeUrl = document.getElementById("youtubeUrl");
+    const loadYoutubeBtn = document.getElementById("loadYoutube");
+    const ytStatus = document.getElementById("ytStatus");
+    const useMe = document.getElementById("useMe");
+    const useMeClose = document.getElementById("useMeClose");
+    const MUSIC_DIR = "music";
+    const MUSIC_MANIFEST = `${MUSIC_DIR}/tracks.json`;
+    let ytPlayer = null;
+    let ytReady = false;
+    let pendingYoutubeId = "";
+    let hasYoutubeSource = false;
+    let ytApiPoll = null;
+    const USE_ME_KEY = "dancer_use_me_seen_v1";
+
+    function setYtStatus(msg){
+      ytStatus.textContent = `YouTube status: ${msg}`;
+    }
+
+    function showUseMeFirstTime(){
+      let seen = false;
+      try {
+        seen = localStorage.getItem(USE_ME_KEY) === "1";
+      } catch {}
+      if (!seen) useMe.classList.remove("hidden");
+    }
+
+    useMeClose.addEventListener("click", () => {
+      useMe.classList.add("hidden");
+      try {
+        localStorage.setItem(USE_ME_KEY, "1");
+      } catch {}
+    });
+
+    helpBtn.addEventListener("click", () => {
+      useMe.classList.remove("hidden");
+    });
+
+    function markYoutubeReady(){
+      if (ytReady) return;
+      ytReady = true;
+      setYtStatus("API ready");
+      if (pendingYoutubeId) {
+        const id = pendingYoutubeId;
+        pendingYoutubeId = "";
+        loadYoutubeVideo(id);
+      }
+      if (ytApiPoll) {
+        clearInterval(ytApiPoll);
+        ytApiPoll = null;
+      }
+    }
+
+    let BPM = +bpmSlider.value;
+    bpmVal.textContent = BPM;
+
+    bpmSlider.addEventListener("input", () => {
+      BPM = +bpmSlider.value;
+      bpmVal.textContent = BPM;
+    });
+
+    function setPresetOptions(tracks){
+      presetMusic.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = tracks.length ? "Choose from /music" : "No tracks in /music/tracks.json";
+      presetMusic.appendChild(placeholder);
+
+      for (const t of tracks) {
+        const file = typeof t === "string" ? t : t?.file;
+        if (!file) continue;
+        const label = typeof t === "string" ? t : (t.label || t.file);
+        const opt = document.createElement("option");
+        opt.value = file;
+        opt.textContent = label;
+        presetMusic.appendChild(opt);
+      }
+    }
+
+    async function loadPresetTracks(){
+      if (Array.isArray(window.MUSIC_TRACKS) && window.MUSIC_TRACKS.length) {
+        setPresetOptions(window.MUSIC_TRACKS);
+        presetMusic.value = "";
+        return;
+      }
+      try {
+        const res = await fetch(`${MUSIC_MANIFEST}?v=${Date.now()}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("Manifest not found");
+        const data = await res.json();
+        const tracks = Array.isArray(data) ? data : (Array.isArray(data?.tracks) ? data.tracks : []);
+        setPresetOptions(tracks);
+      } catch {
+        setPresetOptions([]);
+      }
+      presetMusic.value = "";
+    }
+
+    reloadTracksBtn.addEventListener("click", () => {
+      loadPresetTracks();
+    });
+
+    function extractYoutubeData(raw){
+      const out = { videoId: "", listId: "" };
+      if (!raw) return out;
+      const cleaned = raw.trim();
+      if (/^[a-zA-Z0-9_-]{11}$/.test(cleaned)) {
+        out.videoId = cleaned;
+        return out;
+      }
+      try {
+        const u = new URL(cleaned);
+        const host = u.hostname.replace(/^www\./, "").toLowerCase();
+        out.listId = u.searchParams.get("list") || "";
+        if (host === "youtu.be") {
+          out.videoId = u.pathname.slice(1);
+          return out;
+        }
+        if (host === "youtube.com" || host === "m.youtube.com") {
+          if (u.pathname === "/watch") {
+            out.videoId = u.searchParams.get("v") || "";
+            return out;
+          }
+          const parts = u.pathname.split("/").filter(Boolean);
+          if (parts[0] === "shorts" && parts[1]) {
+            out.videoId = parts[1];
+            return out;
+          }
+          if (parts[0] === "embed" && parts[1]) {
+            out.videoId = parts[1];
+            return out;
+          }
+        }
+      } catch {}
+      return out;
+    }
+
+    function stopYoutube(){
+      try {
+        if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+      } catch {}
+      hasYoutubeSource = false;
+    }
+
+    function loadYoutubeVideo(videoId){
+      if (!videoId) return;
+      // Switch source from local audio to YouTube.
+      if (audio.src) {
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+      }
+      setYtStatus("loading...");
+      hasYoutubeSource = true;
+      if (!ytReady || !(window.YT && window.YT.Player)) {
+        pendingYoutubeId = videoId;
+        setYtStatus("waiting for YouTube API...");
+        if (!ytApiPoll) {
+          let attempts = 0;
+          ytApiPoll = setInterval(() => {
+            attempts++;
+            if (window.YT && window.YT.Player) {
+              markYoutubeReady();
+              return;
+            }
+            if (attempts > 120) {
+              clearInterval(ytApiPoll);
+              ytApiPoll = null;
+              hasYoutubeSource = false;
+              setYtStatus("API load failed (check internet / adblock)");
+            }
+          }, 250);
+        }
+        return;
+      }
+      if (!ytPlayer) {
+        ytPlayer = new YT.Player("ytPlayerHost", {
+          height: "1",
+          width: "1",
+          videoId,
+          playerVars: {
+            autoplay: 1,
+            controls: 0,
+            rel: 0
+          },
+          events: {
+            onReady: (ev) => {
+              ev.target.playVideo();
+              setYtStatus("playing");
+            },
+            onError: (ev) => {
+              const code = ev?.data;
+              hasYoutubeSource = false;
+              if (code === 101 || code === 150) setYtStatus("this video blocks embed playback");
+              else if (code === 153) setYtStatus("open via localhost server (not file://)");
+              else setYtStatus(`failed (error ${code})`);
+            },
+            onStateChange: (ev) => {
+              if (!window.YT) return;
+              if (ev.data === YT.PlayerState.PLAYING) setYtStatus("playing");
+              if (ev.data === YT.PlayerState.PAUSED) setYtStatus("paused");
+              if (ev.data === YT.PlayerState.BUFFERING) setYtStatus("buffering...");
+              if (ev.data === YT.PlayerState.ENDED) setYtStatus("ended");
+            }
+          }
+        });
+      } else {
+        ytPlayer.loadVideoById(videoId);
+        ytPlayer.playVideo();
+      }
+    }
+
+    window.onYouTubeIframeAPIReady = () => {
+      markYoutubeReady();
+    };
+
+    // If API loaded before callback assignment, recover automatically.
+    if (window.YT && window.YT.Player) markYoutubeReady();
+
+    loadYoutubeBtn.addEventListener("click", () => {
+      const parsed = extractYoutubeData(youtubeUrl.value);
+      const id = parsed.videoId;
+      if (!id) {
+        youtubeUrl.value = "";
+        youtubeUrl.placeholder = "Invalid YouTube link";
+        setYtStatus("invalid link");
+        return;
+      }
+      presetMusic.value = "";
+      loadYoutubeVideo(id);
+    });
+
+    audioFile.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      stopYoutube();
+      hasYoutubeSource = false;
+      const url = URL.createObjectURL(file);
+      audio.src = url;
+      presetMusic.value = "";
+      audio.play().catch(() => {});
+    });
+
+    presetMusic.addEventListener("change", () => {
+      const selected = presetMusic.value;
+      if (!selected) return;
+      if (selected.includes("..") || selected.startsWith("/") || selected.startsWith("\\")) return;
+      stopYoutube();
+      hasYoutubeSource = false;
+      audio.src = encodeURI(`${MUSIC_DIR}/${selected}`);
+      audio.play().catch(() => {});
+    });
+
+    loadPresetTracks();
+
+    addEventListener("pointerdown", () => {
+      if (audio.src && audio.paused) audio.play().catch(() => {});
+    }, { once: true });
+
+    toggleBtn.addEventListener("click", async () => {
+      try {
+        if (audio.src) {
+          if (audio.paused) await audio.play();
+          else audio.pause();
+          return;
+        }
+        if (ytPlayer && ytPlayer.getPlayerState) {
+          const state = ytPlayer.getPlayerState();
+          if (window.YT && state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+          else ytPlayer.playVideo();
+        }
+      } catch {}
+    });
+
+    // ===== Helpers =====
+    const rand = (a,b)=>a+Math.random()*(b-a);
+    const randi = (a,b)=>Math.floor(rand(a,b+1));
+    const clamp = (x,a,b)=>Math.max(a, Math.min(b, x));
+    const lerp = (a,b,t)=>a+(b-a)*t;
+
+    // ===== Palette (18) =====
+    const palette = [0,18,36,52,72,95,120,145,165,185,205,225,245,265,285,305,325,340];
+    let paletteIdx = 0;
+
+    // ===== Modes =====
+    let goofyMode = false;
+    let moshMode = false;
+    let handsUpMode = false;
+    let nukeTimer = 0;
+    let shakePower = 0;
+    let flashPower = 0;
+    let megaCrowdMode = false;
+    let singerRise = 0;
+    const singerState = {
+      pinned: false,
+      dragging: false,
+      x: innerWidth * 0.5,
+      y: innerHeight * 0.72,
+      dragDx: 0,
+      dragDy: 0,
+      lastX: innerWidth * 0.5,
+      lastY: innerHeight * 0.72,
+    };
+
+    // ===== Entities =====
+    const dancers = [];
+    let boss = null;
+
+    function updateCount(){
+      countEl.textContent = dancers.length;
+      bossCountEl.textContent = boss ? "1" : "0";
+    }
+
+    function pointerToCanvas(e){
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    }
+
+    canvas.addEventListener("pointerdown", (e) => {
+      const p = pointerToCanvas(e);
+      const dx = p.x - singerState.lastX;
+      const dy = p.y - singerState.lastY;
+      const hitR = 72;
+      if (dx*dx + dy*dy > hitR*hitR) return;
+
+      singerState.dragging = true;
+      singerState.pinned = true;
+      singerState.dragDx = singerState.lastX - p.x;
+      singerState.dragDy = singerState.lastY - p.y;
+      if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      if (!singerState.dragging) return;
+      const p = pointerToCanvas(e);
+      singerState.x = clamp(p.x + singerState.dragDx, 35, innerWidth - 35);
+      singerState.y = clamp(p.y + singerState.dragDy, 35, innerHeight - 35);
+      singerState.lastX = singerState.x;
+      singerState.lastY = singerState.y;
+      e.preventDefault();
+    });
+
+    function stopSingerDrag(e){
+      if (!singerState.dragging) return;
+      singerState.dragging = false;
+      if (canvas.releasePointerCapture) canvas.releasePointerCapture(e.pointerId);
+    }
+
+    canvas.addEventListener("pointerup", stopSingerDrag);
+    canvas.addEventListener("pointercancel", stopSingerDrag);
+
+    function makeDancer({x,y,isBoss=false} = {}) {
+      const w = innerWidth, h = innerHeight;
+      const hue = palette[paletteIdx % palette.length];
+      paletteIdx++;
+      const startX = x ?? rand(90, w - 90);
+
+      return {
+        x: startX,
+        homeX: startX,
+        baseY: y ?? rand(h*0.53, h*0.90),
+
+        scale: isBoss ? rand(1.9, 2.6) : rand(0.75, 1.45),
+        sway: isBoss ? rand(18, 38) : rand(7, 24),
+        bounce: isBoss ? rand(22, 46) : rand(8, 30),
+        speed: isBoss ? rand(1.15, 1.65) : rand(0.85, 1.35),
+
+        phase: rand(0, Math.PI*2),
+        hue,
+        vx: isBoss ? rand(-6, 6) : rand(-10, 10),
+        mood: rand(0.6, 1.6),
+
+        glitch: rand(0, 1),
+        spinBias: rand(-1, 1),
+        wobble: rand(0.2, 1.2),
+        chaos: rand(0.6, 1.4),
+
+        isBoss,
+        power: isBoss ? rand(0.3, 1.0) : 0,
+      };
+    }
+
+    function addDancer() { dancers.push(makeDancer()); updateCount(); }
+    function spawnMany(n){
+      n = clamp(n, 1, 20000);
+      for (let i=0;i<n;i++) dancers.push(makeDancer());
+      updateCount();
+    }
+    function setPeopleCount(n){
+      n = clamp(n, 0, 20000);
+      if (n > dancers.length) {
+        for (let i=dancers.length; i<n; i++) dancers.push(makeDancer());
+      } else if (n < dancers.length) {
+        dancers.length = n;
+      }
+      updateCount();
+    }
+    function spawnBoss(){
+      const h = innerHeight;
+      boss = makeDancer({
+        x: innerWidth * 0.5,
+        y: rand(h*0.60, h*0.78),
+        isBoss: true
+      });
+      if (Math.random() < 0.6) boss.hue = randi(35, 55);
+      updateCount();
+    }
+
+    // ===== UI events =====
+    addBtn.addEventListener("click", addDancer);
+
+    spawnBtn.addEventListener("click", () => {
+      const n = parseInt(spawnN.value || "1", 10);
+      spawnMany(isFinite(n) ? n : 1);
+    });
+    setPeopleBtn.addEventListener("click", () => {
+      const n = parseInt(setPeopleN.value || "0", 10);
+      setPeopleCount(isFinite(n) ? n : 0);
+    });
+
+    spawnN.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") spawnBtn.click();
+    });
+    setPeopleN.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") setPeopleBtn.click();
+    });
+
+    bossBtn.addEventListener("click", spawnBoss);
+
+    clearBtn.addEventListener("click", () => {
+      dancers.length = 0;
+      boss = null;
+      updateCount();
+    });
+
+    goofyBtn.addEventListener("click", () => {
+      goofyMode = !goofyMode;
+      goofyBtn.textContent = goofyMode ? "🤪 Goofy: ON" : "🤪 Goofy: OFF";
+    });
+
+    moshBtn.addEventListener("click", () => {
+      moshMode = !moshMode;
+      moshBtn.textContent = moshMode ? "🌊 Mosh: ON" : "🌊 Mosh: OFF";
+    });
+
+    handsUpBtn.addEventListener("click", () => {
+      handsUpMode = !handsUpMode;
+      handsUpBtn.textContent = handsUpMode ? "🙌 Hands Up: ON" : "🙌 Hands Up: OFF";
+    });
+
+    nukeBtn.addEventListener("click", () => {
+      nukeTimer = 1.6;
+      shakePower = 22;
+      flashPower = 1.0;
+
+      for (const d of dancers) {
+        d.speed *= rand(1.2, 1.6);
+        d.bounce *= rand(1.2, 1.7);
+        d.sway *= rand(1.2, 1.6);
+        d.vx += rand(-40, 40);
+        d.hue = palette[randi(0, palette.length-1)];
+      }
+      if (boss) {
+        boss.speed *= rand(1.3, 1.9);
+        boss.bounce *= rand(1.3, 2.1);
+        boss.sway *= rand(1.3, 2.0);
+        boss.power = 1.0;
+        boss.hue = randi(35, 55);
+      }
+    });
+
+    // Keyboard shortcuts
+    addEventListener("keydown", (e) => {
+      if (e.target && (e.target.tagName === "INPUT")) return;
+      const k = e.key.toLowerCase();
+      if (k === "g") goofyBtn.click();
+      if (k === "m") moshBtn.click();
+      if (k === "h") handsUpBtn.click();
+      if (k === "n") nukeBtn.click();
+      if (k === "b") bossBtn.click();
+      if (k === "c") clearBtn.click();
+    });
+
+    // ===== Dance steps =====
+    const steps = [
+      { armL:-0.8, armR: 0.3, legL: 8,  legR:-6, head:-4 },
+      { armL:-0.3, armR: 0.8, legL:-6,  legR: 8, head: 4 },
+      { armL:-1.3, armR: 1.3, legL: 0,  legR: 0, head: 0 },
+      { armL:-0.6, armR: 0.6, legL: 10, legR:10, head: 2 },
+      { armL: 0.9, armR:-0.9, legL:-8,  legR:-8, head:-2 },
+      { armL: 0.1, armR: 1.1, legL: 4,  legR:-10, head:0 },
+      { armL:-0.2, armR: 0.2, legL: 0,  legR: 0, head:0 },
+      { armL: 1.2, armR: 0.2, legL: 6,  legR: 6, head:3 },
+      { armL:-1.0, armR:-0.2, legL: 12, legR:-2, head:-3 },
+      { armL: 0.3, armR: 1.4, legL:-2, legR: 12, head: 3 },
+      { armL:-1.5, armR: 0.4, legL: 14, legR: 2, head:-5 },
+      { armL: 0.4, armR:-1.5, legL: 2,  legR: 14, head: 5 },
+      { armL:-0.9, armR: 1.0, legL: 6,  legR:-12, head:-1 },
+      { armL: 1.0, armR:-0.9, legL:-12, legR: 6, head: 1 },
+      { armL:-0.4, armR: 1.6, legL: 10, legR: 0, head: 2 },
+      { armL: 1.6, armR:-0.4, legL: 0,  legR: 10, head:-2 },
+    ];
+
+    const bossMoves = [
+      { armL:-1.6, armR: 0.6, legL: 18, legR:-10, head:-6 },
+      { armL: 0.6, armR: 1.6, legL:-10, legR: 18, head: 6 },
+      { armL:-2.2, armR: 2.2, legL: 0,  legR: 0, head: 0 },
+      { armL:-0.2, armR: 2.0, legL: 22, legR: 6, head: 2 },
+      { armL: 2.0, armR:-0.2, legL: 6,  legR: 22, head:-2 },
+      { armL: 1.9, armR: 1.9, legL:-12, legR:-12, head: 0 },
+      { armL:-1.0, armR: 1.0, legL: 10, legR: 10, head: 0 },
+      { armL: 2.4, armR: 0.4, legL: 14, legR: 14, head: 4 },
+      { armL:-2.5, armR: 0.8, legL: 24, legR: 4,  head:-7 },
+      { armL: 0.8, armR: 2.5, legL: 4,  legR: 24, head: 7 },
+      { armL:-1.8, armR:-0.2, legL: 20, legR:-8, head:-5 },
+      { armL:-0.2, armR:-1.8, legL:-8, legR: 20, head: 5 },
+      { armL: 2.3, armR:-1.1, legL: 16, legR:-14, head:-3 },
+      { armL:-1.1, armR: 2.3, legL:-14, legR: 16, head: 3 },
+      { armL: 2.6, armR: 1.1, legL: 12, legR: 22, head: 6 },
+      { armL: 1.1, armR: 2.6, legL: 22, legR: 12, head:-6 },
+    ];
+
+    function getTimeSeconds() {
+      if (!audio.paused && audio.currentTime) return audio.currentTime;
+      if (ytPlayer && ytPlayer.getPlayerState && ytPlayer.getCurrentTime && window.YT) {
+        const state = ytPlayer.getPlayerState();
+        if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.PAUSED) {
+          return ytPlayer.getCurrentTime() || 0;
+        }
+      }
+      return performance.now() / 1000;
+    }
+
+    function beatFactor(t){
+      const bps = BPM/60;
+      const phase = (t * bps) % 1;
+      return Math.pow(1 - phase, 4);
+    }
+
+    // ===== Stage & Singer =====
+    function drawStage(t, beat){
+      // stage position
+      const stageY = innerHeight * 0.88;
+
+      // ambient spotlights
+      ctx.globalAlpha = 0.22 + beat*0.08;
+      for (let i=0;i<3;i++){
+        const x = innerWidth*(0.22 + i*0.28) + Math.sin(t*0.7+i)*30;
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(200,200,255,.25)";
+        ctx.ellipse(x, stageY-220, 110, 260, 0.1*i, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      // platform body
+      const grad = ctx.createLinearGradient(0, stageY-60, 0, stageY+80);
+      grad.addColorStop(0, "rgba(255,255,255,.10)");
+      grad.addColorStop(1, "rgba(0,0,0,.35)");
+      ctx.fillStyle = grad;
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      ctx.lineWidth = 1;
+
+      // main platform
+      roundRect(40, stageY-30, innerWidth-80, 90, 22);
+      ctx.fill();
+      ctx.stroke();
+
+      // front lip shine
+      ctx.globalAlpha = 0.35 + beat*0.20;
+      ctx.fillStyle = "rgba(255,255,255,.10)";
+      roundRect(60, stageY-18, innerWidth-120, 20, 999);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // speaker stacks
+      drawSpeaker(70, stageY-115, 58, 110, beat);
+      drawSpeaker(innerWidth-128, stageY-115, 58, 110, beat);
+
+      // mic stand area (center)
+      ctx.globalAlpha = 0.22;
+      ctx.fillStyle = "rgba(0,0,0,.55)";
+      ctx.beginPath();
+      ctx.ellipse(innerWidth*0.5, stageY+35, 120, 28, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // singer character (simple cartoon)
+      const hudBottom = hud ? hud.getBoundingClientRect().bottom : 120;
+      const topSingerY = hudBottom + 36;
+      const autoX = innerWidth * 0.5;
+      const autoY = lerp(stageY + 100, topSingerY, singerRise);
+      const singerX = singerState.pinned ? singerState.x : autoX;
+      const singerY = singerState.pinned ? singerState.y : autoY;
+      singerState.lastX = singerX;
+      singerState.lastY = singerY;
+      drawSinger(singerX, singerY, t, beat, singerRise, megaCrowdMode);
+      if (!audio.src && !hasYoutubeSource) drawSingerThought(singerX, singerY);
+    }
+
+    function drawSpeaker(x,y,w,h,beat){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.fillStyle = "rgba(10,10,18,.65)";
+      ctx.strokeStyle = "rgba(255,255,255,.12)";
+      roundRect(0,0,w,h,14);
+      ctx.fill(); ctx.stroke();
+
+      // cones
+      const pulse = 1 + beat*0.35;
+      ctx.globalAlpha = 0.9;
+      for (let i=0;i<2;i++){
+        const cy = 28 + i*52;
+        ctx.beginPath();
+        ctx.fillStyle = "rgba(255,255,255,.08)";
+        ctx.ellipse(w/2, cy, 18*pulse, 14*pulse, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.strokeStyle = "rgba(255,255,255,.15)";
+        ctx.ellipse(w/2, cy, 22, 18, 0, 0, Math.PI*2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    function drawSinger(cx, cy, t, beat, rise, megaMode){
+      // singer bob + arm wave + airborne drift
+      const bob = Math.sin(t*4.5) * (8 + beat*12);
+      const sway = Math.sin(t*1.8) * 12;
+      const airLift = (Math.abs(Math.sin(t*2.5)) * (14 + beat*18)) + Math.sin(t*5.8) * 4;
+      const airDrift = Math.sin(t*1.3) * 18;
+      const mouth = 0.35 + 0.65*Math.abs(Math.sin(t*8.0 + beat*2.0));
+      const armWave = Math.sin(t*6.0) * (0.7 + beat*0.6);
+      const singerScale = 1.24 + beat*0.08 + rise*0.22;
+      const whiteBoost = megaMode ? rise : 0;
+
+      ctx.save();
+      ctx.translate(cx + sway + airDrift, cy + bob - airLift);
+      ctx.scale(singerScale, singerScale);
+
+      // glow behind singer
+      ctx.globalAlpha = 0.18 + beat*0.18 + whiteBoost*0.24;
+      ctx.fillStyle = whiteBoost > 0
+        ? `rgba(255,255,255,${0.34 + whiteBoost*0.5})`
+        : "rgba(255,220,160,.35)";
+      ctx.beginPath();
+      ctx.arc(0, -25, 42 + beat*18 + whiteBoost*22, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      if (megaMode && rise < 1) {
+        // Dark veil while emerging; fades out as singer rises.
+        ctx.fillStyle = `rgba(0,0,0,${(1-rise)*0.55})`;
+        ctx.beginPath();
+        ctx.arc(0, -20, 58, 0, Math.PI*2);
+        ctx.fill();
+      }
+
+      // mic stand
+      ctx.strokeStyle = megaMode ? "rgba(255,255,255,.55)" : "rgba(255,255,255,.25)";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(12, 32);
+      ctx.lineTo(20, -18);
+      ctx.stroke();
+      // mic head
+      ctx.fillStyle = megaMode ? "rgba(255,255,255,.68)" : "rgba(255,255,255,.22)";
+      ctx.beginPath();
+      ctx.ellipse(24, -22, 9, 7, -0.2, 0, Math.PI*2);
+      ctx.fill();
+
+      // body
+      ctx.strokeStyle = megaMode ? "rgba(255,255,255,.98)" : "rgba(255,255,255,.55)";
+      ctx.lineWidth = 4;
+      // torso
+      ctx.beginPath();
+      ctx.moveTo(0, 28);
+      ctx.lineTo(0, -10);
+      ctx.stroke();
+
+      // legs
+      ctx.beginPath();
+      ctx.moveTo(0, 28);
+      ctx.lineTo(-12, 56);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, 28);
+      ctx.lineTo(12, 56);
+      ctx.stroke();
+
+      // head
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = megaMode ? "rgba(255,255,255,1)" : "rgba(255,255,255,.6)";
+      ctx.beginPath();
+      ctx.arc(0, -28, 16, 0, Math.PI*2);
+      ctx.stroke();
+
+      // mouth (singing)
+      ctx.strokeStyle = megaMode ? "rgba(255,255,255,1)" : "rgba(255,220,160,.9)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(4, -26, 3 + mouth*4, 2 + mouth*2, 0, 0, Math.PI*2);
+      ctx.stroke();
+
+      // arm (one holding mic-ish)
+      ctx.strokeStyle = megaMode ? "rgba(255,255,255,1)" : "rgba(255,255,255,.55)";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, -2);
+      ctx.lineTo(18, -18);
+      ctx.stroke();
+
+      // hype arm wave
+      ctx.beginPath();
+      ctx.moveTo(0, -2);
+      ctx.lineTo(-18, -16 + armWave*10);
+      ctx.stroke();
+
+      // tiny hat / hair
+      ctx.strokeStyle = megaMode ? "rgba(255,255,255,.9)" : "rgba(255,255,255,.35)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-10, -44);
+      ctx.lineTo(10, -44);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawSingerThought(cx, cy){
+      const bx = cx + 52;
+      const by = cy - 136;
+      const bw = 380;
+      const bh = 88;
+
+      ctx.save();
+      // cloud body
+      ctx.fillStyle = "rgba(255,255,255,.96)";
+      ctx.strokeStyle = "rgba(20,20,35,.75)";
+      ctx.lineWidth = 2;
+      roundRect(bx - bw*0.5, by - bh*0.5, bw, bh, 28);
+      ctx.fill();
+      ctx.stroke();
+
+      // cloud puffs
+      ctx.beginPath(); ctx.arc(bx - bw*0.30, by - bh*0.52, 20, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(bx - bw*0.12, by - bh*0.58, 24, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(bx + bw*0.09, by - bh*0.56, 22, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+      // thought trail
+      ctx.beginPath(); ctx.arc(cx + 14, cy - 78, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx + 28, cy - 98, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+      // text
+      ctx.fillStyle = "#101018";
+      ctx.font = "bold 14px Segoe UI, Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("I dont know how to sing...", bx, by - 12);
+      ctx.font = "13px Segoe UI, Arial, sans-serif";
+      ctx.fillText("Maybe select a song from the dropdown", bx, by + 10);
+      ctx.fillText("to feed the lyrics in my broan.", bx, by + 30);
+      ctx.restore();
+    }
+
+    function roundRect(x,y,w,h,r){
+      r = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+r, y);
+      ctx.arcTo(x+w, y, x+w, y+h, r);
+      ctx.arcTo(x+w, y+h, x, y+h, r);
+      ctx.arcTo(x, y+h, x, y, r);
+      ctx.arcTo(x, y, x+w, y, r);
+      ctx.closePath();
+    }
+
+    // ===== Screen FX =====
+    function applyScreenShake(dt){
+      shakePower = Math.max(0, shakePower - 20*dt);
+      flashPower = Math.max(0, flashPower - 1.4*dt);
+      if (nukeTimer > 0) nukeTimer = Math.max(0, nukeTimer - dt);
+
+      const sx = (Math.random()*2-1) * shakePower;
+      const sy = (Math.random()*2-1) * shakePower;
+      ctx.save();
+      ctx.translate(sx, sy);
+    }
+
+    function applyCameraPunch(t, beat){
+      const zoom = 1 + beat*0.03 + Math.sin(t*1.1)*0.006;
+      const cx = innerWidth * 0.5;
+      const cy = innerHeight * 0.5;
+      ctx.translate(cx, cy);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-cx, -cy);
+    }
+
+    function drawVignette(beat){
+      const cx = innerWidth * 0.5;
+      const cy = innerHeight * 0.5;
+      const innerR = Math.min(innerWidth, innerHeight) * 0.34;
+      const outerR = Math.max(innerWidth, innerHeight) * 0.75;
+      const g = ctx.createRadialGradient(cx, cy, innerR, cx, cy, outerR);
+      g.addColorStop(0, "rgba(0,0,0,0)");
+      g.addColorStop(0.6, "rgba(0,0,0,0.14)");
+      g.addColorStop(1, `rgba(0,0,0,${0.46 + beat*0.08})`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, innerWidth, innerHeight);
+    }
+
+    // ===== Drawing dancers =====
+    function pickStepSet(entity){ return entity.isBoss ? bossMoves : steps; }
+
+    function drawStick(e, t, beat) {
+      const set = pickStepSet(e);
+      const syncCrowd = moshMode || megaCrowdMode;
+
+      const bps = BPM / 60;
+      const stepRate = bps;
+      const lead = e.isBoss ? 0.35 : 0;
+      const stepFloat = syncCrowd
+        ? (t * stepRate * 1.15 + (e.isBoss ? lead : 0)) % set.length
+        : (t * stepRate * e.speed + e.phase*0.2 + lead) % set.length;
+
+      const i0 = Math.floor(stepFloat);
+      const i1 = (i0 + 1) % set.length;
+      const ft = stepFloat - i0;
+
+      const st0 = set[i0], st1 = set[i1];
+
+      let armL = lerp(st0.armL, st1.armL, ft);
+      let armR = lerp(st0.armR, st1.armR, ft);
+      let legL = lerp(st0.legL, st1.legL, ft);
+      let legR = lerp(st0.legR, st1.legR, ft);
+      let headN = lerp(st0.head, st1.head, ft);
+
+      const bob = Math.sin(t*6*e.speed + e.phase) * e.bounce * (0.35 + 0.65*beat);
+      const sway = Math.sin(t*2.2*e.speed + e.phase) * e.sway;
+      const crowdPhase = syncCrowd ? t*2.4 : t*2.2 + e.baseY*0.018 + e.phase*0.25;
+      const waveSway = syncCrowd ? Math.sin(crowdPhase) * (16 + beat*24) : 0;
+      const waveBob = syncCrowd ? Math.cos(crowdPhase*0.9) * (5 + beat*8) : 0;
+
+      if (e.isBoss) {
+        const p = 0.6 + 0.9*beat;
+        e.power = clamp(e.power + (goofyMode ? 0.15 : 0.06)*beat, 0, 1);
+        armL *= (1 + e.power*0.35*p);
+        armR *= (1 + e.power*0.35*p);
+        legL *= (1 + e.power*0.25*p);
+        legR *= (1 + e.power*0.25*p);
+        headN *= (1 + e.power*0.20*p);
+      }
+
+      if (goofyMode) {
+        const g = 0.7 + 0.9*beat;
+        const wob = Math.sin(t*10*e.wobble + e.phase) * 0.35 * e.chaos;
+        armL += wob * e.spinBias * g;
+        armR -= wob * e.spinBias * g;
+        legL += Math.sin(t*9 + e.phase) * 10 * e.chaos * g;
+        legR += Math.cos(t*9 + e.phase) * 10 * e.chaos * g;
+        headN += Math.sin(t*14 + e.phase) * 7 * e.chaos * g;
+      }
+
+      if (nukeTimer > 0) {
+        const boost = 1 + nukeTimer*0.8;
+        armL *= boost; armR *= boost;
+        legL *= boost; legR *= boost;
+        headN *= boost;
+      }
+
+      if (handsUpMode) {
+        const syncedWave = Math.sin(t * 3.6) * (0.45 + beat*0.2);
+        armL = -2.25 + syncedWave;
+        armR = -0.90 + syncedWave;
+        legL = lerp(legL, 2, 0.7);
+        legR = lerp(legR, 2, 0.7);
+        headN = lerp(headN, Math.sin(t*3.6) * 2.5, 0.5);
+      }
+
+      const s = e.scale;
+      const x = e.x + sway + waveSway;
+      const y = e.baseY + bob + waveBob;
+
+      const torso = 34 * s;
+      const arm = 26 * s;
+      const leg = 28 * s;
+      const headR = 10 * s;
+
+      const hipY = y;
+      const neckY = y - torso;
+      const headY = neckY - headR - 2*s;
+
+      // Boss aura
+      if (e.isBoss) {
+        ctx.globalAlpha = 0.12 + 0.22*beat;
+        ctx.strokeStyle = `hsla(${e.hue}, 90%, 85%, 1)`;
+        ctx.lineWidth = 10 * s;
+        ctx.beginPath();
+        ctx.arc(x, neckY, 20*s, 0, Math.PI*2);
+        ctx.stroke();
+      }
+
+      ctx.globalAlpha = 0.96;
+      ctx.strokeStyle = `hsl(${e.hue}, 85%, ${goofyMode ? 75 : 70}%)`;
+      ctx.lineWidth = (e.isBoss ? 4 : 3) * s;
+      ctx.lineCap = "round";
+
+      // torso
+      ctx.beginPath(); ctx.moveTo(x, hipY); ctx.lineTo(x, neckY); ctx.stroke();
+
+      // head
+      ctx.beginPath(); ctx.arc(x + headN, headY, headR, 0, Math.PI*2); ctx.stroke();
+
+      // arms
+      const aL = handsUpMode ? armL : armL + Math.sin(t*8*e.speed + e.phase)*0.08*e.mood;
+      const aR = handsUpMode ? armR : armR + Math.cos(t*8*e.speed + e.phase)*0.08*e.mood;
+      ctx.beginPath(); ctx.moveTo(x, neckY); ctx.lineTo(x + Math.cos(aL)*arm, neckY + Math.sin(aL)*arm); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, neckY); ctx.lineTo(x + Math.cos(aR)*arm, neckY + Math.sin(aR)*arm); ctx.stroke();
+
+      // legs
+      ctx.beginPath(); ctx.moveTo(x, hipY); ctx.lineTo(x - 10*s, hipY + leg + legL); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, hipY); ctx.lineTo(x + 10*s, hipY + leg + legR); ctx.stroke();
+
+      // crown
+      if (e.isBoss) {
+        ctx.globalAlpha = 0.95;
+        ctx.strokeStyle = `hsl(${randi(38,55)}, 95%, 75%)`;
+        ctx.lineWidth = 3 * s;
+        const cx = x + headN, cy = headY - headR - 6*s;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10*s, cy + 8*s);
+        ctx.lineTo(cx - 5*s,  cy);
+        ctx.lineTo(cx,        cy + 8*s);
+        ctx.lineTo(cx + 5*s,  cy);
+        ctx.lineTo(cx + 10*s, cy + 8*s);
+        ctx.stroke();
+      }
+
+      // shadow
+      ctx.globalAlpha = 0.16;
+      ctx.fillStyle = "rgba(0,0,0,.75)";
+      ctx.beginPath();
+      ctx.ellipse(x, hipY + leg + 18*s, (e.isBoss? 32:22)*s, (e.isBoss? 11:8)*s, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // ===== Update =====
+    function update(t, dt){
+      megaCrowdMode = dancers.length > 500;
+      singerRise = clamp(singerRise + (megaCrowdMode ? dt*0.7 : -dt*0.9), 0, 1);
+
+      for (const d of dancers){
+        const goofyDrift = goofyMode ? Math.sin(t*2 + d.phase)*18*d.chaos : 0;
+        if (moshMode || megaCrowdMode) {
+          const laneWave = megaCrowdMode
+            ? Math.sin(t*1.7) * 36
+            : Math.sin(t*1.7 + d.baseY*0.02 + d.phase*0.2) * 42;
+          const targetX = clamp(d.homeX + laneWave, 30, innerWidth - 30);
+          d.x += (targetX - d.x) * Math.min(1, dt*5.5);
+        } else {
+          d.x += (d.vx + goofyDrift) * dt;
+        }
+        if (d.x < 30) d.x = innerWidth - 30;
+        if (d.x > innerWidth - 30) d.x = 30;
+      }
+      if (boss) {
+        const centerPull = (innerWidth*0.5 - boss.x) * 0.35 * dt;
+        boss.x += centerPull;
+        const drift = goofyMode ? Math.sin(t*3 + boss.phase)*10*boss.chaos : 0;
+        const moshDrift = (moshMode || megaCrowdMode) ? Math.sin(t*1.7) * 26 : 0;
+        boss.x += (drift + moshDrift) * dt;
+        boss.x = clamp(boss.x, 60, innerWidth-60);
+      }
+    }
+
+    // ===== Loop =====
+    let last = performance.now();
+    function frame(now){
+      const dt = Math.min(0.05, (now - last)/1000);
+      last = now;
+
+      const t = getTimeSeconds();
+      const beat = beatFactor(t);
+
+      // base clear
+      ctx.fillStyle = `rgb(${10 + beat*18}, ${10 + beat*10}, ${16 + beat*24})`;
+      ctx.fillRect(0,0,innerWidth,innerHeight);
+
+      applyScreenShake(dt);
+      applyCameraPunch(t, beat);
+
+      // stage first (platform + singer)
+      drawStage(t, beat);
+
+      // crowd next (sorted for depth)
+      update(t, dt);
+      dancers.sort((a,b)=>a.baseY-b.baseY);
+      for (const d of dancers) drawStick(d, t, beat);
+
+      // boss last
+      if (boss) drawStick(boss, t, beat);
+
+      // nuke flash
+      if (flashPower > 0) {
+        ctx.globalAlpha = 0.45 * flashPower;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0,0,innerWidth,innerHeight);
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.restore(); // shake transform
+      drawVignette(beat);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    // starters: singer only
+    updateCount();
+    showUseMeFirstTime();
+  </script>
+</body>
+</html>
