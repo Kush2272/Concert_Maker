@@ -232,49 +232,38 @@
       justify-content: flex-end;
     }
     .hidden{ display:none !important; }
-    .mobile-block{
+    #mobile-blocker {
       position: fixed;
-      inset: 0;
-      z-index: 9999;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: #070710;
+      z-index: 10000;
       display: none;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      padding: 30px;
       text-align: center;
-      padding: 28px;
-      background: radial-gradient(900px 500px at 30% 10%, #1c1a3f 0%, transparent 55%),
-                  linear-gradient(180deg, #0d0d19, #07070f);
-      color: #fff;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
-    .mobile-block.show{ display:flex; }
-    .mobile-block .panel{
-      max-width: 420px;
-      padding: 18px 20px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,.2);
-      background: rgba(20,20,35,.7);
-      box-shadow: 0 18px 44px rgba(0,0,0,.45);
+    .warning-card {
+      background: var(--panel);
+      border: 1px solid var(--bad);
+      padding: 30px;
+      border-radius: var(--round2);
+      max-width: 400px;
+      box-shadow: 0 0 40px rgba(255, 130, 160, 0.2);
     }
-    .mobile-block h2{
-      margin: 0 0 8px;
-      font-size: 22px;
-      letter-spacing: .3px;
-    }
-    .mobile-block p{
-      margin: 0;
-      font-size: 14px;
-      color: rgba(255,255,255,.85);
-      line-height: 1.5;
-    }
+    .warning-card h2 { color: var(--bad); margin-top: 0; }
+    .warning-card p { line-height: 1.6; color: var(--text); }
 
     canvas { display:block; width:100vw; height:100vh; }
   </style>
 </head>
 <body>
-  <div id="mobileBlock" class="mobile-block">
-    <div class="panel">
-      <h2>Desktop Only</h2>
-      <p>Please open in desktop/laptop, no phone support.</p>
+  <div id="mobile-blocker">
+    <div class="warning-card">
+      <h2 id="block-title">Access Denied</h2>
+      <p id="block-message">This experience requires a large screen and a keyboard to handle the chaos.</p>
     </div>
   </div>
   <div class="hud">
@@ -372,6 +361,26 @@
   <script src="https://www.youtube.com/iframe_api"></script>
   <script src="music/tracks.js"></script>
   <script>
+    (function detectDevice() {
+      const blocker = document.getElementById("mobile-blocker");
+      const title = document.getElementById("block-title");
+      const message = document.getElementById("block-message");
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isSmallScreen = window.innerWidth < 1024;
+      const isDesktopModeOnPhone = isMobileUA && window.innerWidth >= 1024;
+
+      if (isMobileUA || isSmallScreen) {
+        blocker.style.display = "flex";
+        if (isDesktopModeOnPhone) {
+          title.textContent = "Nice Try";
+          message.innerHTML = "Devs already know this trick. It is <b>Desktop Only</b> because you will be rage baited and quit if you opened this on a phone. The performance will melt your hands.";
+        } else {
+          title.textContent = "Desktop Only";
+          message.textContent = "This concert is too heavy for mobile browsers. Please switch to a computer to spawn infinite dudes.";
+        }
+      }
+    })();
+
     // ===== Canvas =====
     const canvas = document.getElementById("c");
     const ctx = canvas.getContext("2d");
@@ -414,7 +423,6 @@
     const ytStatus = document.getElementById("ytStatus");
     const useMe = document.getElementById("useMe");
     const useMeClose = document.getElementById("useMeClose");
-    const mobileBlock = document.getElementById("mobileBlock");
     const MUSIC_DIR = "music";
     const MUSIC_MANIFEST = `${MUSIC_DIR}/tracks.json`;
     let ytPlayer = null;
@@ -434,11 +442,6 @@
         seen = localStorage.getItem(USE_ME_KEY) === "1";
       } catch {}
       if (!seen) useMe.classList.remove("hidden");
-    }
-
-    function updateMobileBlock(){
-      const isPhoneLike = /Android|iPhone|iPod|Mobile/i.test(navigator.userAgent) || innerWidth < 820;
-      mobileBlock.classList.toggle("show", isPhoneLike);
     }
 
     useMeClose.addEventListener("click", () => {
@@ -1436,8 +1439,6 @@
     // starters: singer only
     updateCount();
     showUseMeFirstTime();
-    updateMobileBlock();
-    addEventListener("resize", updateMobileBlock);
   </script>
 </body>
 </html>
